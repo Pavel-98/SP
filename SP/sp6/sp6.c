@@ -106,7 +106,7 @@ void obrobnik(struct connection* con, int d_client) {
         int get;
         int sendS;
         char getBuff[1024];
-        char sendBuff[2200];
+        char sendBuff[2048];
         time_t timr;
         struct tm now;
         do {
@@ -129,7 +129,7 @@ void obrobnik(struct connection* con, int d_client) {
             temp[2] = getBuff[get - 1];
             time(&timr);
             now = *(localtime(&timr));
-            sendS = sprintf(sendBuff, "HTTP/1.1 200 Ok, Content-Type: %s, time %s, content length %i, buffer %s", temp, asctime(&now), (int)sizeof(info), info);
+            sendS = sprintf(sendBuff, "HTTP/1.1 200 Ok, Content-Type: %s, time %s, content length %i, buffer %s", temp, asctime(&now), sizeof(info), );
             send(d_client, sendBuff, sendS, 0);
         } while (strcmp(getBuff, "close") != 0);
         fprintf(d, "process close");
