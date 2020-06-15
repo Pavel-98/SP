@@ -1,0 +1,9 @@
+program is started
+pid = 3198
+program is started
+pid = 3211
+program is started
+pid = 3239
+program is started
+pid = 3258
+signal number = 1, signal exit code = -345021488, sending to process with id = -345021488, associated with errno = 32766signal number = 1, signal exit code = -345021488, sending to process with id = -345021488, associated with errno = 32766
