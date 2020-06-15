@@ -1,7 +1,4 @@
 
-
-
-
 #include<time.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -129,7 +126,7 @@ void obrobnik(struct connection* con, int d_client) {
             temp[2] = getBuff[get - 1];
             time(&timr);
             now = *(localtime(&timr));
-            sendS = sprintf(sendBuff, "HTTP/1.1 200 Ok, Content-Type: %s, time %s, content length %i, buffer %s", temp, asctime(&now), sizeof(info), );
+            sendS = sprintf(sendBuff, "HTTP/1.1 200 Ok, Content-Type: %s\n, time %s\n, content length %lu\n, buffer %s\n", temp, asctime(&now), sizeof(info), info);
             send(d_client, sendBuff, sendS, 0);
         } while (strcmp(getBuff, "close") != 0);
         fprintf(d, "process close");
@@ -153,6 +150,22 @@ struct connection* get_connection(struct connection_queue* queue, int pos) {
     }
     return temp;
 }
+
+struct thread_data {
+    struct connection* connection;
+    int d_client;
+};
+void* thread_f(void* args) {
+    struct thread_data* data = args;
+    if (data) {
+        obrobnik(data->connection, data->d_client);
+    }
+    return NULL;
+}
+
+void signal_handler(int signo, siginfo_t* si, void* ucontext) {
+
+}
 int main(int argc, char* argv[]) {
     int port;
     char* root;
@@ -160,6 +173,12 @@ int main(int argc, char* argv[]) {
     int queueSize;
     char* log;
     int rez;
+    struct sigaction newAction, oldAction;
+    newAction.sa_sigaction = signal_handler;
+    newAction.sa_handler = NULL;
+    newAction.sa_flags = 0;
+    sigaction(SIGINT, &newAction, &oldAction);
+    sigaction(SIGTERM, &newAction, &oldAction);
     while ((rez = getopt(argc, argv, "p:r:t:q:l")) != -1) {
         switch (rez) {
         case 'a': port = atoi(optarg); break;
@@ -182,9 +201,11 @@ int main(int argc, char* argv[]) {
     log = "log";
     fprintf(d, "start\n");
     //printf("%s", strerror(errno));
+    printf("beforefork");
     switch (fork()) {
     case -1: printf("problems %s", strerror(errno)); break;
     case 0:
+        printf("afterfork");
         in.sin_family = PF_INET;
         in.sin_addr.s_addr = htonl(INADDR_ANY);
         in.sin_port = htons(port);
@@ -231,7 +252,13 @@ int main(int argc, char* argv[]) {
             pthread_t thread;
             pool.threads[pool.exist] = &thread;
             pool.exist++;
-            int err = pthread_create(&thread, NULL, obrobnik, get_connection(&queue, queue.size - 1));
+
+            struct thread_data data = {
+              get_connection(&queue, queue.size - 1),
+              pool.exist - 1
+            };
+
+            int err = pthread_create(&thread, NULL, thread_f, (void*)&data);
             if (err) {
                 printf("Error creating thread: %d\n", err);
                 return 1;
