@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include <time.h>
+#include <limits.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <arpa/inet.h>
+#include<errno.h>
+//#include<threads.h>
+int sockets[2];
+char buffer[64];
+pthread_t thread1;
+pthread_t thread2;
+int umova1 = 1;
+int umova2 = 1;
+pthread_cond_t condition;
+pthread_mutex_t mutex
+;
+
+void* function1(void* args){
+    while(umova1){
+      int size = rand() % 6 + 1;
+      char* buff = (char*)calloc(size + 1, 1);
+      memset(buff, rand() % (122 - 97) + 97, size);
+      write(sockets[0], buff, size + 1);
+      free(buff);
+      sleep(1);
+    }
+    return NULL;
+}
+
+void* function2(void* args){
+  char buff[64] = { 0, };
+  int i = 0;
+  while(umova2){
+    char temp[8] = { 0, };
+    int r = read(sockets[1], &temp[1], 6);
+    if(i > 0){
+      strncat(buff, " ", 1);
+    }
+    strncat(buff, temp, r);
+    i += r + 1;
+      pthread_mutex_lock(&mutex);    
+    if(i + 7 >= 64){
+      pthread_mutex_lock(&mutex);
+      buff[i] = '\0';
+      memcpy(buffer, buff, sizeof(buffer));
+      memset(buff, 0, sizeof(buff));
+      i = 0;
+      pthread_cond_signal(&condition);
+      pthread_mutex_unlock(&mutex);
+    }
+    sleep(1);
+  }
+  return NULL;
+}
+
+
+
+int main(){
+  FILE* file = fopen("filed", "rt");
+  socketpair(PF_LOCAL, SOCK_STREAM, 0, sockets);
+  pthread_cond_init(&condition, NULL); 
+  pthread_mutex_init(&mutex, NULL);
+  pthread_create(&thread1, NULL, function1, NULL);
+  pthread_create(&thread2, NULL, function2, NULL);
+  srand(time(NULL));
+  int counter = 0;
+  while(1){
+    pthread_mutex_lock(&mutex);
+    pthread_cond_wait(&condition, &mutex);
+    fwrite(buffer, strlen(buffer), 1, file);
+    memset(buffer, 0, sizeof(buffer));
+    counter++;
+    if(counter >= 5){
+      umova1 = 0;
+      umova2 = 0;
+      pthread_join(thread1, NULL);
+      pthread_join(thread2, NULL);
+      break;
+    }
+    pthread_mutex_unlock(&mutex);
+    sleep(1);
+  }
+  fflush(file);
+  return 0;
+}
