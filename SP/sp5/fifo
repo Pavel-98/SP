@@ -1,1 +1,89 @@
-dydfh
+600000000000000000000000000000000000#include<time.h>
+#include<time.h>
+#include <stdio.h>
+#includ77033600000000000000000000000000000000000e <fcntl.h>
+#include <unistd.h>
+#include <sys/time.h>
+#inclu77033600000000000000000000000000000000000de <sys/types.h>
+#include<errno.h>
+#include<string.h>
+#inclu77033600000000000000000000000000000000000de<sys/wait.h>
+#include<stdlib.h>
+#include<netinet/in.h>
+#in?77033600000000000000000000000000000000000clude<sys/socket.h>
+#include<arpa/inet.h>
+#include<sys/stat.77033600000000000000000000000000000000000h>
+
+#define BUFFER_SIZE (int)(2048 / 60)
+
+char fifo[] = "fif77033600000000000000000000000000000000000o";
+
+struct buffer_item {
+    int size;
+    char* header;
+  77033600000000000000000000000000000000000  char* prefix;
+    char data[60];
+    char* sufix;
+};
+
+int 77033600000000000000000000000000000000000controlSum(struct buffer_item* item) {
+    return sizeof(ite77033600000000000000000000000000000000000m->prefix) + sizeof(item->data) + sizeof(item->header) + 1;
+?77033600000000000000000000000000000000000}
+
+struct buffer {
+    struct buffer_item items[BUFFER_SIZE]?77033600000000000000000000000000000000000;
+};
+
+void level1(struct buffer_item* item, int size) {
+    77033600000000000000000000000000000000000//printf("------%d\n", size);
+    FILE* d = fopen(fifo, "a")77033600000000000000000000000000000000000;
+    if (d == NULL) {
+        printf("fifo %s", strerror(er?77033600000000000000000000000000000000000rno));
+        return;
+    }
+    printf("%s\n", "fifo opened?77033600000000000000000000000000000000000");
+    char info[size];
+    sprintf(info, "info \n%s, \n%s,77033600000000000000000000000000000000000 \n%s, \n%s\n", item->prefix, item->header, item->data, item?77033600000000000000000000000000000000000->sufix);
+    printf(info);
+    fprintf(d, "%s", info);
+    ?77033600000000000000000000000000000000000
+    fflush(d);
+}
+
+void level2(struct buffer* buf) {
+
+    fo?77033600000000000000000000000000000000000r (int i = 0; i < BUFFER_SIZE; i++) {
+        char prefix[8]?77033600000000000000000000000000000000000;
+        prefix[0] = 0x02;
+        if (i != BUFFER_SIZE - 177033600000000000000000000000000000000000) {
+            prefix[1] = '1';
+            prefix[2] = '2'?77033600000000000000000000000000000000000;
+            prefix[3] = '0';
+        }
+        else {
+
+   77033600000000000000000000000000000000000         char toChar[3];
+            sprintf(toChar, "%i", (77033600000000000000000000000000000000000int)sizeof(buf->items[i].data));
+            prefix[1] = toC?77033600000000000000000000000000000000000har[0];
+            prefix[2] = toChar[1];
+            prefi77033600000000000000000000000000000000000x[3] = toChar[2];
+        }
+        prefix[7] = '0';
+
+      inux$??77033600000000000000000000000000000000000  if (i != BUFFER_SIZE - 1) {
+            prefix[6] = 0x01;
+77033600000000000000000000000000000000000        }
+        else {
+            prefix[6] = 0x0f;
+     inux$??77033600000000000000000000000000000000000   }
+        char number[2];
+        sprintf(number, "%i", (77033600000000000000000000000000000000000int)i);
+        prefix[5] = number[0];
+
+        prefix[7] = ?770336000000000000000000000000000000000000;
+        buf->items[i].prefix = prefix;
+        char sufix77033600000000000000000000000000000000000[3];
+        char sum[2];
+        sprintf(sum, "%i", control77033600000000000000000000000000000000000Sum(&(buf->items[i])));
+        sufix[0] = sum[0];
+        s77033

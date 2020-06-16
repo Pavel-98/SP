@@ -1,4 +1,4 @@
-#include<ti 
+
 #include<time.h>
 #include<time.h>
 #include <stdio.h>
@@ -48,7 +48,7 @@ void level1(struct buffer_item* item, int size) {
     sprintf(info, "%s%s%s%s", item->prefix, item->header, item->data, item->sufix);
     printf(info);
     fprintf(d, "%s", info);
-    
+
     fflush(d);
 }
 
@@ -123,8 +123,8 @@ void level4(char* path, struct buffer* buf) {
     fread(text, 1, 2048, d);
 
     for (int i = 0; i < BUFFER_SIZE; i += 1) {
- 
-        
+
+
         for (int j = 0; j < 60; j += 1) {
 
             buf->items[i].data[j] = text[i * 60 + j];
@@ -132,7 +132,7 @@ void level4(char* path, struct buffer* buf) {
         }
 
     }
-    
+
 
     level3(buf);
 }
@@ -220,4 +220,4 @@ int main() {
         }
         return 0;
     }
-}   
+}
